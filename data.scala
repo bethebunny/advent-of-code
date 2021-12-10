@@ -2,12 +2,20 @@ package advent_of_code
 
 import scala.collection.{AbstractIterator, BufferedIterator}
 import scala.io.{BufferedSource, Codec, Source}
-import java.io.{Closeable, FileInputStream, FileNotFoundException, InputStream, PrintStream, File => JFile}
+import java.io.{Closeable, FileInputStream, FileNotFoundException, InputStream, PrintStream, PrintWriter, File => JFile}
 import java.net.{URI, URL}
 
 package object data {
   type SessionID = String
   implicit val sessionID: SessionID = sys.env("AOC_SESSION")
+
+  val inputCacheDir = ".inputs"
+
+  {
+    val f = new JFile(inputCacheDir)
+    if (!f.exists) f.mkdir
+    if (!f.isDirectory) throw new RuntimeException(s"${inputCacheDir} exists and is not a directory")
+  }
 
   def createBufferedSource(
     inputStream: InputStream,
@@ -33,9 +41,16 @@ package object data {
   val baseURL = "https://adventofcode.com/2021/day"
 
   def dataForDay(day: Int)(implicit sessionID: SessionID): Iterator[String] = {
-    val url = s"$baseURL/$day/input"
-    val src = sourceFromURL(url)
-    src.getLines()
+    val cacheFile = new JFile(s"$inputCacheDir/day_$day.txt")
+    if (!cacheFile.exists) {
+      val url = s"$baseURL/$day/input"
+      val src = sourceFromURL(url)
+      val writer = new PrintWriter(cacheFile)
+      src.getLines().foreach(writer.println)
+      writer.flush()
+      writer.close()
+    }
+    Source.fromFile(cacheFile.toString).getLines()
   }
 
   def rawDataForDay(day: Int)(implicit sessionID: SessionID): String = {
