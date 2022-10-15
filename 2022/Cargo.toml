@@ -15,3 +15,4 @@ path = "src/day02.rs"
 
 [dependencies]
 reqwest = { version = "0.11.13", features = ["blocking", "cookies"] }
+lazy_static = "1.4.0"
