@@ -1,35 +1,32 @@
 mod aoc_client;
 
-use std::collections::HashSet;
-
 fn main() {
-    let data = aoc_client::input(2018, 1).unwrap();
-    let lines = data.trim().split("\n");
-    let deltas = lines
-        .map(|s| s.parse::<i32>())
-        .collect::<Result<Vec<i32>, _>>()
-        .unwrap();
-    println!("{}", deltas.iter().sum::<i32>());
+    let data = aoc_client::input(2022, 1).unwrap();
+    // I'd love to have fewer collects() but I don't know how
+    let lines = data.trim().split("\n").collect::<Vec<_>>();
+    let elf_packs = lines.split(|s| *s == "").collect::<Vec<_>>();
+    let mut elf_calories = elf_packs
+        .iter()
+        // ss.iter() produces Iterator<Item = &&str> instead of &str
+        // we can get the type we "want" with .cloned()
+        .map(|ss| elf_carrying_calories(ss.iter().cloned()))
+        .collect::<Vec<_>>();
 
-    let freqs = deltas.into_iter()
-        .cycle()
-        // Scan docs are bullshit.
-        // - Iterating over a scan unwraps the returned Option
-        // - None as a return indicates stop iteration
-        .scan(0, |freq, delta| {
-            *freq += delta;
-            Some(*freq)
-        });
-    let mut seen_freqs = freqs.scan(
-        HashSet::new(),
-        |seen, freq| {
-            let res = seen.contains(&freq);
-            seen.insert(freq);
-            if res { Some(Some(freq)) } else { Some(None) }
-        }
-    // Option implements IntoIter, but you can't use
-    // .flatten on an Iterable<Option<T>> like you'd expect.
-    ).filter_map(std::convert::identity);
-    println!("{}", seen_freqs.next().unwrap());
-    //println!("{}", &freqs.next().unwrap());
+    println!("{}", elf_calories.iter().max().unwrap());
+    elf_calories.sort();
+    // I don't know why I need this declaration (or .iter())
+    // - when I try to inline it I get some unholy error about trait bounds
+    let largest_3 = elf_calories[elf_calories.len() - 3..elf_calories.len()].iter();
+    println!("{}", largest_3.sum::<u32>());
+}
+
+fn elf_carrying_calories<'a, I>(it: I) -> u32
+where
+    I: Iterator<Item = &'a str>,
+{
+    it.map(|s| s.parse::<u32>())
+        .collect::<Result<Vec<u32>, _>>()
+        .unwrap()
+        .iter()
+        .sum()
 }
