@@ -1,9 +1,9 @@
 mod aoc_client;
 
 use regex::{Match, Regex};
-use std::ops::Range;
+use std::ops::RangeInclusive;
 
-struct AssignmentPair([Range<u32>; 2]);
+struct AssignmentPair([RangeInclusive<u32>; 2]);
 
 impl AssignmentPair {
     fn from_str(s: &str) -> AssignmentPair {
@@ -11,24 +11,21 @@ impl AssignmentPair {
         let groups = regex.captures(s).unwrap();
         AssignmentPair([
             // Ranges are [), assignments are []
-            parse_match_int(groups.get(1)).unwrap()..parse_match_int(groups.get(2)).unwrap() + 1,
-            parse_match_int(groups.get(3)).unwrap()..parse_match_int(groups.get(4)).unwrap() + 1,
+            parse_match_int(groups.get(1)).unwrap()..=parse_match_int(groups.get(2)).unwrap(),
+            parse_match_int(groups.get(3)).unwrap()..=parse_match_int(groups.get(4)).unwrap(),
         ])
     }
 
     fn one_contains_other(&self) -> bool {
         let [left, right] = &self.0;
-        (left.start <= right.start && left.end >= right.end)
-            || (right.start <= left.start && right.end >= left.end)
+        (left.start() <= right.start() && left.end() >= right.end())
+            || (right.start() <= left.start() && right.end() >= left.end())
     }
 
     fn overlapping(&self) -> bool {
         let [left, right] = &self.0;
-        // Ranges are [), assignments are []
-        left.contains(&right.start)
-            || left.contains(&(right.end - 1))
-            || right.contains(&left.start)
-            || right.contains(&(left.end - 1))
+        // If overlapping, one will always contain the other's start
+        left.contains(&right.start()) || right.contains(&left.start())
     }
 }
 
