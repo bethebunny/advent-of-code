@@ -19,10 +19,6 @@ fn main() {
         }
     }
     let all_values: Vec<i64> = register_values.iter().flatten().cloned().collect();
-    all_values
-        .iter()
-        .enumerate()
-        .for_each(|v| println!("{:?}", v));
     println!(
         "{}",
         interesting_cycles
@@ -31,6 +27,7 @@ fn main() {
             .map(|&cycle| cycle as i64 * all_values[cycle - 1])
             .sum::<i64>()
     );
+
     all_values
         .iter()
         .array_chunks::<40>()
@@ -41,7 +38,7 @@ fn main() {
                     if (reg - x as i64).abs() <= 1 {
                         '#'
                     } else {
-                        '.'
+                        ' '
                     }
                 })
                 .collect::<String>()
