@@ -11,7 +11,8 @@ enum Error {
     ParseIntError(ParseIntError),
 }
 
-type Item = u128;
+type Item = usize;
+type MonkeyId = usize;
 
 #[derive(Debug, Copy, Clone)]
 enum WorryLevel {
@@ -39,13 +40,13 @@ lazy_static! {
 
 #[derive(Clone)]
 struct Monkey {
-    id: usize,
+    id: MonkeyId,
     items: Vec<Item>,
     op: Rc<dyn Fn(Item) -> Item>,
     test: Rc<dyn Fn(Item) -> bool>,
     divisor: Item,
-    pass_test_monkey: usize,
-    fail_test_monkey: usize,
+    pass_test_monkey: MonkeyId,
+    fail_test_monkey: MonkeyId,
 }
 
 impl Monkey {
@@ -83,7 +84,7 @@ impl Monkey {
         })
     }
 
-    fn inspect_items(&mut self, worry_level: WorryLevel) -> Vec<(usize, Item)> {
+    fn inspect_items(&mut self, worry_level: WorryLevel) -> Vec<(MonkeyId, Item)> {
         self.items
             .drain(..)
             .map(|item| {
@@ -98,14 +99,16 @@ impl Monkey {
     }
 }
 
-fn full_round(monkies: &mut Vec<Monkey>, worry_level: WorryLevel) -> Vec<usize> {
+fn full_round(monkies: &mut Vec<Monkey>, worry_level: WorryLevel) -> Vec<Item> {
     // Keep item levels "under control"
     let modulus: Item = monkies.iter().map(|m| m.divisor).product();
     for monkey in monkies.iter_mut() {
-        monkey.items = monkey.items.iter().map(|&i| i % modulus).collect();
+        for item in monkey.items.iter_mut() {
+            *item %= modulus;
+        }
     }
 
-    let mut monkey_inspections: Vec<usize> = vec![];
+    let mut monkey_inspections: Vec<Item> = vec![];
     for i in 0..monkies.len() {
         let items_thrown = monkies[i].inspect_items(worry_level);
         monkey_inspections.push(items_thrown.len());
@@ -116,11 +119,10 @@ fn full_round(monkies: &mut Vec<Monkey>, worry_level: WorryLevel) -> Vec<usize> 
     monkey_inspections
 }
 
-fn monkey_business(monkies: &Vec<Monkey>, worry_level: WorryLevel, num_rounds: usize) -> usize {
+fn monkey_business(monkies: &Vec<Monkey>, worry_level: WorryLevel, num_rounds: usize) -> Item {
     let mut monkies = monkies.clone();
     let mut monkey_inspections = vec![0; monkies.len()];
     for _round in 0..num_rounds {
-        println!("{_round}");
         let round_inspections = full_round(&mut monkies, worry_level);
         for (i, inspections) in round_inspections.iter().enumerate() {
             monkey_inspections[i] += inspections;
