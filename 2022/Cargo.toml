@@ -57,6 +57,10 @@ path = "src/day11.rs"
 name = "day12"
 path = "src/day12.rs"
 
+[[bin]]
+name = "day13"
+path = "src/day13.rs"
+
 [dependencies]
 reqwest = { version = "0.11.13", features = ["blocking", "cookies"] }
 lazy_static = "1.4.0"
